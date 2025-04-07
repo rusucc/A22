@@ -1,0 +1,50 @@
+#include "DYPA22.h"
+#define MIN_TIME 50
+#define DEBUG false
+
+DYPA22 Sensors[8] = {};
+uint8_t addressArray[8] = { 0xD2, 0xD4, 0xD6, 0xD8, 0xDA, 0xDC, 0xDE, 0xE0 };
+uint8_t firingSequence[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };  // -1 fata de realitate, array 0-index
+uint8_t distances[8] = {};
+
+void setup() {
+  Serial.begin(38400);
+  Wire.begin();
+  delay(100);
+
+  for (int i = 0; i < 8; i++) {
+    Sensors[i].setAddress(addressArray[i]);
+    delay(1);
+    Sensors[i].setRange(0x03);
+    delay(1);
+    Sensors[i].sendPowerNoiseReductionLevel(2);
+    delay(1);
+    Sensors[i].setConeAngle(3); //1-2-3-4
+    delay(1);
+  }
+  for (int i = 0; i < 8; i++) {
+    Sensors[i].setMillisMeasure(i * 10);
+  }
+}
+void loop() {
+  static uint32_t millisSerialPrint = 0;
+  for (int i = 0; i < 8; i++) {
+    int id = firingSequence[i];
+    Sensors[id].sendMeasureRequest();
+    delay(10);
+  }
+  delay(1);
+  for (int i = 0; i < 8; i++) {
+    int id = firingSequence[i];
+    Sensors[id].sendReceiveRequest();
+    delay(10);
+  }
+  delay(10);
+  for (int i = 0; i < 8; i++) {
+    Serial.print(Sensors[i].getDistance());
+    Serial.print(',');
+    Serial.print(Sensors[i].getConeAngle());
+    if (i != 7) Serial.print(',');
+  }
+  Serial.println();
+}
