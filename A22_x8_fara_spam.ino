@@ -7,7 +7,7 @@
 #define SONAR_DELAY 10
 
 DYPA22 Sensors[8] = {};
-uint8_t addressArray[8] = { 0xD2, 0xD4, 0xD6, 0xD8, 0xDA, 0xDC, 0xDE, 0xE0 };
+uint8_t addressArray[8] = { 0xDE, 0xDC, 0xDA, 0xD8, 0xD6, 0xD4, 0xD2, 0xE0 };
 uint8_t firingSequence[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };  // -1 fata de realitate, array 0-index
 uint8_t distances[8] = {};
 
