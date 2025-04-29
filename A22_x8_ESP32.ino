@@ -19,7 +19,7 @@ start
 int sonarDelay = 10;
 
 const char start_command[] = "start";
-bool start_received = false; 
+bool start_received = false;
 
 const char set_delay_command[] = "delay";
 const char set_active_sonars[] = "activate";
@@ -40,9 +40,9 @@ void setup() {
   Wire.begin();
   delay(10);
 
-  while(start_received == false){
+  while (start_received == false) {
     process_commands();
-  } 
+  }
 
   Serial.println("Comcheck over");
 
@@ -67,7 +67,7 @@ void loop() {
   if (rangeListenToggle == RANGE) {
     if (millis() - millisSonarChange > sonarDelay) {
       int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0, ex S1 e index 0
-      Sensors[firingId].sendMeasureRequest();
+      if (activeSonar[currentSonarId]) Sensors[firingId].sendMeasureRequest();
       if (currentSonarId == 8) {
         rangeListenToggle = LISTEN;
         currentSonarId = 1;
@@ -79,9 +79,11 @@ void loop() {
   } else {  //LISTEN
     if (millis() - millisSonarChange > sonarDelay) {
       int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0
-      Sensors[firingId].sendReceiveRequest();
-      delay(1);  //Sa poata raspunde sonarul
-      Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
+      if (activeSonar[currentSonarId]) {
+        Sensors[firingId].sendReceiveRequest();
+        delay(1);  //Sa poata raspunde sonarul
+        Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
+      }
       if (currentSonarId == 8) {
         rangeListenToggle = RANGE;
         currentSonarId = 1;
@@ -122,22 +124,21 @@ void process_commands() {
       if (strncmp(sdata, set_active_sonars, strlen(set_active_sonars)) == 0) {
         unsigned int arg_offset = strlen(set_active_sonars);
         const char delimiter[] = " ";
-        char *id = strtok(sdata+arg_offset, delimiter);
-        while(id != NULL){
-          uint8_t id_index = atoi(id)-1;
+        char *id = strtok(sdata + arg_offset, delimiter);
+        while (id != NULL) {
+          uint8_t id_index = atoi(id) - 1;
           activeSonar[id_index] = 1;
-          Serial.printf("Activated S%d (index value %d)\n",id_index+1,id_index);
+          Serial.printf("Activated S%d (index value %d)\n", id_index + 1, id_index);
           id = strtok(NULL, delimiter);
         }
-      } else if(strncmp(sdata, set_delay_command, strlen(set_delay_command)) == 0){
+      } else if (strncmp(sdata, set_delay_command, strlen(set_delay_command)) == 0) {
         unsigned int arg_offset = strlen(set_delay_command);
         if (strlen(sdata) > arg_offset) {
           val = atoi(&sdata[arg_offset]);
           sonarDelay = val;
-          Serial.printf("Changed sweep delay between sonars to %d",sonarDelay);
+          Serial.printf("Changed sweep delay between sonars to %d", sonarDelay);
         }
-      }
-      else if(strncmp(sdata, start_command, strlen(start_command)) == 0){
+      } else if (strncmp(sdata, start_command, strlen(start_command)) == 0) {
         start_received = true;
         Serial.printf("Received start command");
       }
