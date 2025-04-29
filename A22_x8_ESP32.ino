@@ -2,6 +2,13 @@
 A22 x8
 
 In setup asteapta comanda "start" primita pe serial, dupa activate.
+
+Exemplu:
+
+start 0 4 5 6
+delay 5
+start
+
 */
 #include "DYPA22.h"
 #define MIN_TIME 50
