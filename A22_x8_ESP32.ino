@@ -60,6 +60,7 @@ void setup() {
   }
 }
 void loop() {
+  
   static bool rangeListenToggle = RANGE;  //trece prima data prin array de senzori ca sa le trimita ranging request, apoi mai trece o data sa culeaga rezultatele
   static int currentSonarId = 1;
   static uint32_t millisSonarChange = 0;
@@ -67,7 +68,7 @@ void loop() {
   if (rangeListenToggle == RANGE) {
     if (millis() - millisSonarChange > sonarDelay) {
       int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0, ex S1 e index 0
-      if (activeSonar[currentSonarId]) Sensors[firingId].sendMeasureRequest();
+      if (activeSonar[currentSonarId-1]) Sensors[firingId].sendMeasureRequest();
       if (currentSonarId == 8) {
         rangeListenToggle = LISTEN;
         currentSonarId = 1;
@@ -79,7 +80,7 @@ void loop() {
   } else {  //LISTEN
     if (millis() - millisSonarChange > sonarDelay) {
       int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0
-      if (activeSonar[currentSonarId]) {
+      if (activeSonar[currentSonarId-1]) {
         Sensors[firingId].sendReceiveRequest();
         delay(1);  //Sa poata raspunde sonarul
         Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
