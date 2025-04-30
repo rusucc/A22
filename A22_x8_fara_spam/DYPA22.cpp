@@ -2,7 +2,7 @@
 void DYPA22::setAddress(uint8_t address){
   _address = (address)>>1;
 }
-DYPA22::DYPA22(uint8_t address8, uint8_t range, uint8_t coneAngle){
+DYPA22::DYPA22(uint8_t address8 = 0xE8, uint8_t range = 0x02, uint8_t coneAngle = 4){
   setRange(range);
   setAddress(address8);
   _coneAngle = coneAngle; //nu folosesc setterul pentru ca face apel la I2C, la constructor nu este initializat inca si da halt programul
@@ -25,7 +25,7 @@ void DYPA22::setMillisMeasure(uint32_t timeOfRequest){
 void DYPA22::setMillisReceive(uint32_t timeOfRequest){
  _millisReceive = timeOfRequest;
 }
-void DYPA22::setPowerNoiseReductionLevel(uint8_t level){
+void DYPA22::sendPowerNoiseReductionLevel(uint8_t level){
   _powerReductionLevel = level;
   Wire.beginTransmission(_address);
   Wire.write(0x06);
@@ -66,7 +66,7 @@ void DYPA22::sendReceiveRequest(){
   }
   _distance = (received[0] << 8) | (received[1]);
 }
-void DYPA22::writeNewAddress(uint8_t newAddress){
+void DYPA22::writeNewAddress(uint8_t newAddress = 0xE8){
   if((newAddress>>7)&1){ //verifica sa fie adresa buna, pe 8 biti
     Wire.beginTransmission(_address);
     Wire.write(0x05);

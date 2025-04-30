@@ -34,6 +34,7 @@ bool active_status = false;
 
 const char set_delay_command[] = "delay";
 const char set_active_sonars[] = "activate";
+const char set_deactivate_sonars[] = "deactivate";
 const char set_noise_command[] = "noise";
 const char set_range_command[] = "range";
 const char set_cone_command[] = "cone";
@@ -141,6 +142,16 @@ void process_commands() {
           uint8_t id_index = atoi(id) - 1;
           activeSonar[id_index] = 1;
           Serial.printf("Activated S%d (index value %d)\n", id_index + 1, id_index);
+          id = strtok(NULL, delimiter);
+        }
+      } else if (strncmp(sdata, set_deactivate_sonars, strlen(set_deactivate_sonars)) == 0) {  //active sonars
+        uint8_t arg_offset = strlen(set_deactivate_sonars);
+        const char delimiter[] = " ";
+        char *id = strtok(sdata + arg_offset, delimiter);
+        while (id != NULL) {
+          uint8_t id_index = atoi(id) - 1;
+          activeSonar[id_index] = 0;
+          Serial.printf("Deactivated S%d (index value %d)\n", id_index + 1, id_index);
           id = strtok(NULL, delimiter);
         }
       } else if (strncmp(sdata, set_noise_command, strlen(set_noise_command)) == 0) {  //noise
