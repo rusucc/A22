@@ -19,9 +19,9 @@ class DYPA22{
     void setAddress(uint8_t address = 0xE8);
     void setMillisMeasure(uint32_t timeOfRequest);
     void setMillisReceive(uint32_t timeOfRequest);
+    void setPowerNoiseReductionLevel(uint8_t level);
     void sendMeasureRequest();
     void sendReceiveRequest();
-    void sendPowerNoiseReductionLevel(uint8_t level);
     uint8_t getAddress();
     uint8_t getRange();
     uint8_t getConeAngle();
