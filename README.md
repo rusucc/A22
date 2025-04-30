@@ -18,15 +18,19 @@ range S2:L2 S2:L3 S2:L1
 `
 noise S2:L1 S3:L5 S4:L2 S5:L2
 `
+
 `
 activate 1 2 3 4 5
 `
+
 `
 start
 `
+
 `
 deactivate 3 4
 `
+
 `
 stop
 `
