@@ -8,8 +8,13 @@ Exemplu:
 activate 1 2 3 4 5
 
 noise S2:L3 S1:L2 S5:L4
+(1 - battery, 2 - usb, 3 - long distance usb, 4 - swtiched mode power supply, 5 - switcched mode power supply + interferente)
+
 cone S2:L2
+(1 - 30 grade, 2 - 40 grade, 3 - 50 grade, 4 - 60 grade)
+
 range S5:L1
+( 1 - 50cm, 2 - 150cm, 3 - 250cm, 4 - 350cm)
 
 delay 5
 
