@@ -5,8 +5,14 @@ In setup asteapta comanda "start" primita pe serial, dupa activate.
 
 Exemplu:
 
-start 0 4 5 6
+activate 1 2 3 4 5
+
+noise S2:L3 S1:L2 S5:L4
+cone S2:L2
+range S5:L1
+
 delay 5
+
 start
 
 */
@@ -19,10 +25,15 @@ start
 int sonarDelay = 10;
 
 const char start_command[] = "start";
-bool start_received = false;
+bool active_status = false;
 
 const char set_delay_command[] = "delay";
 const char set_active_sonars[] = "activate";
+const char set_noise_command[] = "noise";
+const char set_range_command[] = "range";
+const char set_cone_command[] = "cone";
+const char stop_command[] = "stop";
+
 
 
 DYPA22 Sensors[8] = {};
@@ -40,58 +51,53 @@ void setup() {
   Wire.begin();
   delay(10);
 
-  while (start_received == false) {
-    process_commands();
-  }
-
-  Serial.println("Comcheck over");
-
   for (int i = 0; i < 8; i++) {
-    if (activeSonar[i]) {
-      Sensors[i].setAddress(addressArray[i]);
-      delay(1);
-      Sensors[i].setRange(0x03);
-      delay(1);
-      Sensors[i].sendPowerNoiseReductionLevel(2);
-      delay(1);
-      Sensors[i].setConeAngle(3);  //1-2-3-4
-      delay(1);
-    }
+    Sensors[i].setAddress(addressArray[i]);
+    delay(1);
+    Sensors[i].setRange(0x03);
+    delay(1);
+    Sensors[i].setPowerNoiseReductionLevel(2);
+    delay(1);
+    Sensors[i].setConeAngle(3);  //1-2-3-4
+    delay(1);
   }
 }
 void loop() {
-  
+
   static bool rangeListenToggle = RANGE;  //trece prima data prin array de senzori ca sa le trimita ranging request, apoi mai trece o data sa culeaga rezultatele
   static int currentSonarId = 1;
   static uint32_t millisSonarChange = 0;
 
-  if (rangeListenToggle == RANGE) {
-    if (millis() - millisSonarChange > sonarDelay) {
-      int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0, ex S1 e index 0
-      if (activeSonar[currentSonarId-1]) Sensors[firingId].sendMeasureRequest();
-      if (currentSonarId == 8) {
-        rangeListenToggle = LISTEN;
-        currentSonarId = 1;
-      } else {
-        currentSonarId++;
+  process_commands();
+  if (active_status) {
+    if (rangeListenToggle == RANGE) {
+      if (millis() - millisSonarChange > sonarDelay) {
+        int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0, ex S1 e index 0
+        if (activeSonar[currentSonarId - 1]) Sensors[firingId].sendMeasureRequest();
+        if (currentSonarId == 8) {
+          rangeListenToggle = LISTEN;
+          currentSonarId = 1;
+        } else {
+          currentSonarId++;
+        }
+        millisSonarChange = millis();
       }
-      millisSonarChange = millis();
-    }
-  } else {  //LISTEN
-    if (millis() - millisSonarChange > sonarDelay) {
-      int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0
-      if (activeSonar[currentSonarId-1]) {
-        Sensors[firingId].sendReceiveRequest();
-        delay(1);  //Sa poata raspunde sonarul
-        Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
+    } else {  //LISTEN
+      if (millis() - millisSonarChange > sonarDelay) {
+        int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0
+        if (activeSonar[currentSonarId - 1]) {
+          Sensors[firingId].sendReceiveRequest();
+          delay(1);  //Sa poata raspunde sonarul
+          Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
+        }
+        if (currentSonarId == 8) {
+          rangeListenToggle = RANGE;
+          currentSonarId = 1;
+        } else {
+          currentSonarId++;
+        }
+        millisSonarChange = millis();
       }
-      if (currentSonarId == 8) {
-        rangeListenToggle = RANGE;
-        currentSonarId = 1;
-      } else {
-        currentSonarId++;
-      }
-      millisSonarChange = millis();
     }
   }
 }
@@ -122,8 +128,8 @@ void process_commands() {
       pSdata = sdata;  // Reset pointer to start of string.
 
 
-      if (strncmp(sdata, set_active_sonars, strlen(set_active_sonars)) == 0) {
-        unsigned int arg_offset = strlen(set_active_sonars);
+      if (strncmp(sdata, set_active_sonars, strlen(set_active_sonars)) == 0) {  //active sonars
+        uint8_t arg_offset = strlen(set_active_sonars);
         const char delimiter[] = " ";
         char *id = strtok(sdata + arg_offset, delimiter);
         while (id != NULL) {
@@ -132,16 +138,52 @@ void process_commands() {
           Serial.printf("Activated S%d (index value %d)\n", id_index + 1, id_index);
           id = strtok(NULL, delimiter);
         }
-      } else if (strncmp(sdata, set_delay_command, strlen(set_delay_command)) == 0) {
-        unsigned int arg_offset = strlen(set_delay_command);
+      } else if (strncmp(sdata, set_noise_command, strlen(set_noise_command)) == 0) {  //noise
+        uint8_t arg_offset = strlen(set_noise_command);
+        const char delimiter[] = " ";
+        char *indiv_command = strtok(sdata + arg_offset, delimiter);
+        while (indiv_command != NULL) {
+          uint8_t id_index = (indiv_command[1] - '0') - 1;
+          uint8_t value = (indiv_command[4] - '0');
+          Sensors[id_index].setPowerNoiseReductionLevel(value);
+          Serial.printf("Set noise reduction level of S%d to %d\n", id_index + 1, value);
+          indiv_command = strtok(NULL, delimiter);
+        }
+      } else if (strncmp(sdata, set_cone_command, strlen(set_cone_command)) == 0) {  //cone
+        uint8_t arg_offset = strlen(set_cone_command);
+        const char delimiter[] = " ";
+        char *indiv_command = strtok(sdata + arg_offset, delimiter);
+        while (indiv_command != NULL) {
+          uint8_t id_index = (indiv_command[1] - '0') - 1;
+          uint8_t value = (indiv_command[4] - '0');
+          Sensors[id_index].setConeAngle(value);
+          Serial.printf("Set cone angle of S%d to %d\n", id_index + 1, value);
+          indiv_command = strtok(NULL, delimiter);
+        }
+      } else if (strncmp(sdata, set_range_command, strlen(set_range_command)) == 0) {  //range
+        uint8_t arg_offset = strlen(set_range_command);
+        const char delimiter[] = " ";
+        char *indiv_command = strtok(sdata + arg_offset, delimiter);
+        while (indiv_command != NULL) {
+          uint8_t id_index = (indiv_command[1] - '0') - 1;
+          uint8_t value = (indiv_command[4] - '0');
+          Sensors[id_index].setRange(value);
+          Serial.printf("Set range of S%d to %d\n", id_index + 1, value);
+          indiv_command = strtok(NULL, delimiter);
+        }
+      } else if (strncmp(sdata, set_delay_command, strlen(set_delay_command)) == 0) {  //delay
+        uint8_t arg_offset = strlen(set_delay_command);
         if (strlen(sdata) > arg_offset) {
           val = atoi(&sdata[arg_offset]);
           sonarDelay = val;
           Serial.printf("Changed sweep delay between sonars to %d", sonarDelay);
         }
-      } else if (strncmp(sdata, start_command, strlen(start_command)) == 0) {
-        start_received = true;
+      } else if (strncmp(sdata, start_command, strlen(start_command)) == 0) {  //start_command
+        active_status = true;
         Serial.printf("Received start command");
+      } else if (strncmp(sdata, stop_command, strlen(stop_command)) == 0) {  //stop command
+        active_status = false;
+        Serial.printf("Received stop command");
       }
     }  // if \r
     else {
