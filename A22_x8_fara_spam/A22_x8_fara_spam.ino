@@ -1,16 +1,3 @@
-#include <DW1000Ng.hpp>
-#include <DW1000NgCompileOptions.hpp>
-#include <DW1000NgConfiguration.hpp>
-#include <DW1000NgConstants.hpp>
-#include <DW1000NgRTLS.hpp>
-#include <DW1000NgRanging.hpp>
-#include <DW1000NgRegisters.hpp>
-#include <DW1000NgTime.hpp>
-#include <DW1000NgUtils.hpp>
-#include <SPIporting.hpp>
-#include <deprecated.hpp>
-#include <require_cpp11.hpp>
-
 #include "DYPA22.h"
 #define MIN_TIME 50
 #define DEBUG false
