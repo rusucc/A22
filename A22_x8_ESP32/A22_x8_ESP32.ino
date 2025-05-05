@@ -52,7 +52,7 @@ uint8_t distances[8] = {};
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   Wire.begin();
   delay(10);
@@ -79,7 +79,7 @@ void loop() {
     if (rangeListenToggle == RANGE) {
       if (millis() - millisSonarChange > sonarDelay) {
         int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0, ex S1 e index 0
-        if (activeSonar[currentSonarId - 1]) Sensors[firingId].sendMeasureRequest();
+        if (activeSonar[firingId]) Sensors[firingId].sendMeasureRequest();
         if (currentSonarId == 8) {
           rangeListenToggle = LISTEN;
           currentSonarId = 1;
@@ -91,10 +91,10 @@ void loop() {
     } else {  //LISTEN
       if (millis() - millisSonarChange > sonarDelay) {
         int firingId = firingSequence[currentSonarId - 1];  //array cu index de la 0
-        if (activeSonar[currentSonarId - 1]) {
+        if (activeSonar[firingId]) {
           Sensors[firingId].sendReceiveRequest();
           delay(1);  //Sa poata raspunde sonarul
-          Serial.printf("S%d : %u \n", currentSonarId, Sensors[firingId].getDistance());
+          Serial.printf("S%d : %u \n", firingId+1, Sensors[firingId].getDistance());
         }
         if (currentSonarId == 8) {
           rangeListenToggle = RANGE;
@@ -135,7 +135,10 @@ void process_commands() {
 
 
       if (strncmp(sdata, set_active_sonars, strlen(set_active_sonars)) == 0) {  //active sonars
+        for(int i=0; i<8; i++) activeSonar[i] = 0; //deactivate everything       
+        
         uint8_t arg_offset = strlen(set_active_sonars);
+        
         const char delimiter[] = " ";
         char *id = strtok(sdata + arg_offset, delimiter);
         while (id != NULL) {
